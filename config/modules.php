@@ -6,5 +6,6 @@
     require 'views.php';
     require 'config.php';
     require 'message.php';
+    require 'forms.php';
     $database = $base;
 ?>

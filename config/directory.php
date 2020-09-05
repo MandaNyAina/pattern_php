@@ -68,6 +68,10 @@
             return $this->racine.'controller/'.$value;
         }
 
+        function models($value = null) {
+            return $this->racine . 'models/' . $value;
+        }
+
         function template($value=null) {
             return $this->racine.'template/'.$value;
         }

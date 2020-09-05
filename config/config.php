@@ -191,7 +191,6 @@
     function upload($files,$path,$filename,$maxSize,$type) {
         $dir = new FileDir();
         if (!$dir->isDir($path)) $dir->createDir($path);
-        $result = false;
         $size = $files["size"];
         $name = $files["name"];
         $tmp = $files["tmp_name"];
@@ -217,14 +216,13 @@
                         break;
                     
                     case 'doc':
-                        $validExt = array("pdf","doc","docx","odt");
+                        $validExt = array("pdf","doc","docx","odt","xls","xlsx");
                         if (in_array($extFile, $validExt)) {
                             if (move_uploaded_file($tmp, $fileDir)) {
-                                $result = true;
+                                return true;
                             } else {
                                 return "IMPORT_DOCUMENT_ERROR";
                             }
-                            return $result;
                         } else {
                             return "NOT_DOCUMENT_FILE";
                         }
@@ -234,11 +232,10 @@
                         $validExt = array("pdf");
                         if (in_array($extFile, $validExt)) {
                             if (move_uploaded_file($tmp, $fileDir)) {
-                                $result = true;
+                                return true;
                             } else {
                                 return "IMPORT_PDF_ERROR";
                             }
-                            return $result;
                         } else {
                             return "NOT_PDF_FILE";
                         }
@@ -248,11 +245,10 @@
                         $validExt = array("mp3","ogg","wav");
                         if (in_array($extFile, $validExt)) {
                             if (move_uploaded_file($tmp, $fileDir)) {
-                                $result = true;
+                                return true;
                             } else {
                                 return "IMPORT_AUDIO_ERROR";
                             }
-                            return $result;
                         } else {
                             return "NOT_AUDIO_FILE";
                         }
@@ -262,11 +258,10 @@
                         $validExt = array("mp4","avi","mkv","webm");
                         if (in_array($extFile, $validExt)) {
                             if (move_uploaded_file($tmp, $fileDir)) {
-                                $result = true;
+                                return true;
                             } else {
                                 return "IMPORT_VIDEO_ERROR";
                             }
-                            return $result;
                         } else {
                             return "NOT_VIDEO_FILE";
                         }
