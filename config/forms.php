@@ -128,6 +128,18 @@
         }
     }
 
+    function create_input($input_data) {
+        $form_id = $input_data['id'];
+        $input_type = $input_data['type'];
+        $input_class = $input_data['class'];
+        $form_name = $input_data['name'];
+        $form_value = $input_data['value'];
+        $form_placeholder = $input_data['placeholder'];
+        echo "
+            <input class='form-control $input_class' type='$input_type' id='$form_id' name='$form_name' ng-model='$form_id' placeholder='$form_placeholder' value='$form_value'>
+        ";
+    }
+
     function submit_button($value_btn, $id_btn, $class_btn, $block_class='') {
         echo "
             <div class='form-group $block_class'>
