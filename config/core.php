@@ -187,7 +187,19 @@
         return $return_value;
     }
 
-    function upload($files, $path, $filename, $maxSize, $type) {
+    function compress_image($source, $destination, $quality) {
+        $info = getimagesize($source);
+        if ($info['mime'] == 'image/jpeg') {
+            $image = imagecreatefromjpeg($source);
+        } elseif ($info['mime'] == 'image/gif') {
+            $image = imagecreatefromgif($source);
+        } elseif ($info['mime'] == 'image/png') {
+            $image = imagecreatefrompng($source);
+        }
+        imagejpeg($image, $destination, $quality);
+    }
+
+    function upload($files, $path, $filename, $type=null, $allow_type=[], $maxSize=204800, $need_compress=false) {
         $error_upload = null;
         $dir = new FileDir();
         if (!$dir->isDir($path)) {
@@ -198,18 +210,22 @@
         $tmp = $files["tmp_name"];
         $extFile = strtolower(substr(strchr($name, "."),1));
         $fileDir = $path.$filename.".".$extFile;
-        $unauthorized_extention = ["","js","ini","php","jvm","exe","py","c","cpp","ts","sql","psql","json"];
+        $unauthorized_extention = empty($allow_type) ? ["","js","ini","php","jvm","exe","py","c","cpp","ts","sql","psql","json","env","jar","dump"] : $allow_type;
         if (in_array($extFile, $unauthorized_extention)) {
             $error_upload = "UNAUTHORIZED_FILE_TYPE";
         } else {
             if ($size <= $maxSize) {
                 switch ($type) {
                     case 'image':
-                        $validExt = array("jpg","jpeg","png");
+                        $validExt = array("jpg","jpeg","png","gif");
                         if (in_array($extFile, $validExt)) {
                             if (!move_uploaded_file($tmp, $fileDir)) {
                                 $error_upload = "IMPORT_IMAGE_ERROR";
-                            }  
+                            } else {
+                                if ($need_compress) {
+                                    compress_image($fileDir, $fileDir."-compressed", 75);
+                                }
+                            }
                         } else {
                             $error_upload = "NOT_IMAGE_FILE";
                         }
@@ -260,7 +276,9 @@
                         break;
                     
                     default:
-                        $error_upload = "ERROR_FILE_TYPE";
+                        if (!move_uploaded_file($tmp, $fileDir)) {
+                            $error_upload = "IMPORT_FILE_ERROR";
+                        }
                         break;
                 }
             } else {
