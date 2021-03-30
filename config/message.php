@@ -1,22 +1,14 @@
 <?php
     class Message {
         
-        function __construct() { }
-
         public function info($value, $width = "100%", $class = "", $style = "") {
             echo '
-                <div class="alert alert-primary ' . $class . '" style="width:' . $width . ';' . $style . '">
-                    ' . $value . '
-                </div>
-                ';
+                <div class="alert alert-primary ' . $class . '" style="width:' . $width . ';' . $style . '">' . $value . '</div>';
         }
 
         public function error($value,$width="100%",$class="",$style="") {
             echo '
-            <div class="alert alert-danger '.$class.'" style="width:'.$width.';'.$style.'">
-                '.$value.'
-            </div>
-            ';
+            <div class="alert alert-danger '.$class.'" style="width:'.$width.';'.$style.'">'.$value.'</div>';
         }
 
         public function warning($value,$width="100%",$class="",$style="") {

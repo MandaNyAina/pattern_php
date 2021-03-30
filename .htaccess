@@ -1,0 +1,28 @@
+RewriteEngine On
+ServerSignature Off
+# If an existing asset or directory is requested go to it as it is
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
+RewriteRule ^ - [L]
+
+# Securite
+<IfModule mod_headers.c>
+        Header set Content-Security-Policy "script-src 'self'"
+        Header always set X-FRAME-OPTIONS "DENY"
+        Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Mise en cache
+<IfModule mod_expires.c>
+        # ExpiresActive On
+        # ExpiresDefault "access plus 1 month"
+        # ExpiresByType image/x-icon "access plus 1 year"
+        # ExpiresByType image/gif "access plus 1 month"
+        # ExpiresByType image/png "access plus 1 month"
+        # ExpiresByType image/jpeg "access plus 1 month"
+        # ExpiresByType text/css "access plus 1 year"
+        # ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+
+# Redirection vers index.php
+RewriteRule ^ /index.php

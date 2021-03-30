@@ -22,6 +22,11 @@
             $this->racine = $concat;
         }
 
+        function siteUrl() {
+            global $config;
+            return $config['site_url'];
+        }
+
         function localDir() {
             return $this->racine;
         }
@@ -60,20 +65,20 @@
             }
         }
 
-        function assest($value=null) {
-            return $this->racine.'assets/'.$value;
+        function assets($value=null,$dir=false) {
+            return ($dir ? $this->localDir() : $this->siteUrl()).'assets/'.$value;
         }
 
-        function controller($value=null) {
-            return $this->racine.'controller/'.$value;
+        function controller($value=null,$dir=false) {
+            return ($dir ? $this->localDir() : $this->siteUrl()).'controller/'.$value;
         }
 
-        function models($value = null) {
-            return $this->racine . 'models/' . $value;
+        function models($value=null,$dir=false) {
+            return ($dir ? $this->localDir() : $this->siteUrl()) . 'models/' . $value;
         }
 
-        function template($value=null) {
-            return $this->racine.'template/'.$value;
+        function template($value=null,$dir=false) {
+            return ($dir ? $this->localDir() : $this->siteUrl()).'template/'.$value;
         }
     }
 

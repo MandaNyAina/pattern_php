@@ -7,10 +7,6 @@
     } catch (Exception $e) {
         routes('/500', $e);
     }
-
-    function getHost() {
-        return $_SERVER['HTTP_HOST'];
-    }
     
     function setSession(string $name, string $value) {
         try {
@@ -46,7 +42,8 @@
             $expire = time() + ($expire_jours * 86400);
             setcookie($name, $value, $expire, "/");
             return true;
-        } catch (\Throwable $th) {
+        } catch (Exception $e) {
+            routes('/500', $e);
             return false;
         }
     }
@@ -66,17 +63,15 @@
     }
 
     function encrypt(string $str) {
-        $ini = parse_ini_file('config.ini');
-        $key_encrypt = $ini['key_encrypt'];
-        $encrypted_string = openssl_encrypt($str, "AES-128-CTR", $key_encrypt, 0, '8565825542115032');
-        return $encrypted_string;
+        global $config;
+        $key_encrypt = $config['key_encrypt'];
+        return openssl_encrypt($str, "AES-128-CTR", $key_encrypt, 0, '8565825542115032');
     }
 
     function decrypt(string $str_encrypt) {
-        $ini = parse_ini_file('config.ini');
-        $key_encrypt = $ini['key_encrypt'];
-        $decrypted_string = openssl_decrypt($str_encrypt, "AES-128-CTR", $key_encrypt, 0, '8565825542115032');
-        return $decrypted_string;
+        global $config;
+        $key_encrypt = $config['key_encrypt'];
+        return openssl_decrypt($str_encrypt, "AES-128-CTR", $key_encrypt, 0, '8565825542115032');
     }
 
     function randomValue(int $length, bool $specialChar = false) {
@@ -113,18 +108,16 @@
     function password_match(string $encrypt, string $value) {
         if (password_verify($value,$encrypt)) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
     
     function password_validator(string $password_string, int $min_length = 8) {
         $correct = preg_match('/(?=^.{8,}$)(?=.*\d)((?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/', $password_string);
         if ($correct && strlen($password_string) > $min_length) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     function clearString(string $str, bool $clear_special_char = false) {
@@ -132,7 +125,9 @@
         $str = stripslashes($str);
         $str = strip_tags($str);
         $str = htmlspecialchars($str);
-        if ($clear_special_char) $str = clearSpecialChar($str);
+        if ($clear_special_char) {
+            $str = clearSpecialChar($str);
+        }
         return $str;
     }
 
@@ -154,131 +149,131 @@
         );
 
         foreach ($normalizeChars as $k => $v) {
-            if (str_contains($k, $str)) $str = str_replace($k, $v, $str);
+            if (str_contains($k, $str)) {
+                $str = str_replace($k, $v, $str);
+            }
         }
         
         return $str;
     }
 
     function currentDatetime($choice="datetime",$concat="-") {
+        $return_value = "";
         switch ($choice) {
             case 'full':
-                return date(" l  d  F  Y  H:i:s");
+                $return_value = date(" l  d  F  Y  H:i:s");
                 break;
             
             case 'datetime':
-                return date(" d$concat"."m$concat"."Y  H:i:s");
+                $return_value = date(" d$concat"."m$concat"."Y  H:i:s");
                 break;
 
             case 'date':
-                return date(" Y$concat"."m$concat"."d");
+                $return_value = date(" Y$concat"."m$concat"."d");
                 break;
             
             case 'date_norme':
-                return date(" d$concat"."m$concat"."Y");
+                $return_value = date(" d$concat"."m$concat"."Y");
                 break;
 
             case 'time':
-                return date("H:i:s");
+                $return_value = date("H:i:s");
                 break;
 
             default:
                 return 0;
                 break;
         }
+        return $return_value;
     }
 
-    function upload($files,$path,$filename,$maxSize,$type) {
+    function upload($files, $path, $filename, $maxSize, $type) {
+        $error_upload = null;
         $dir = new FileDir();
-        if (!$dir->isDir($path)) $dir->createDir($path);
+        if (!$dir->isDir($path)) {
+            $dir->createDir($path);
+        }
         $size = $files["size"];
         $name = $files["name"];
         $tmp = $files["tmp_name"];
         $extFile = strtolower(substr(strchr($name, "."),1));
         $fileDir = $path.$filename.".".$extFile;
-        $unauthorized_extention = ["js","ini","php","jvm","exe","py","c","cpp","ts","sql","psql","json"];
-        if (in_array($extFile,$unauthorized_extention)) {
-            return "UNAUTHORIZED_FILE_TYPE";
+        $unauthorized_extention = ["","js","ini","php","jvm","exe","py","c","cpp","ts","sql","psql","json"];
+        if (in_array($extFile, $unauthorized_extention)) {
+            $error_upload = "UNAUTHORIZED_FILE_TYPE";
         } else {
             if ($size <= $maxSize) {
                 switch ($type) {
                     case 'image':
                         $validExt = array("jpg","jpeg","png");
                         if (in_array($extFile, $validExt)) {
-                            if (move_uploaded_file($tmp, $fileDir)) {
-                                return true;
-                            } else {
-                                return "IMPORT_IMAGE_ERROR";
-                            }
+                            if (!move_uploaded_file($tmp, $fileDir)) {
+                                $error_upload = "IMPORT_IMAGE_ERROR";
+                            }  
                         } else {
-                            return "NOT_IMAGE_FILE";
+                            $error_upload = "NOT_IMAGE_FILE";
                         }
                         break;
                     
                     case 'doc':
                         $validExt = array("pdf","doc","docx","odt","xls","xlsx");
                         if (in_array($extFile, $validExt)) {
-                            if (move_uploaded_file($tmp, $fileDir)) {
-                                return true;
-                            } else {
-                                return "IMPORT_DOCUMENT_ERROR";
-                            }
+                            if (!move_uploaded_file($tmp, $fileDir)) {
+                                $error_upload = "IMPORT_DOCUMENT_ERROR";
+                            } 
                         } else {
-                            return "NOT_DOCUMENT_FILE";
+                            $error_upload = "NOT_DOCUMENT_FILE";
                         }
                         break;
         
                     case 'pdf':
                         $validExt = array("pdf");
                         if (in_array($extFile, $validExt)) {
-                            if (move_uploaded_file($tmp, $fileDir)) {
-                                return true;
-                            } else {
-                                return "IMPORT_PDF_ERROR";
-                            }
+                            if (!move_uploaded_file($tmp, $fileDir)) {
+                                $error_upload = "IMPORT_PDF_ERROR";
+                            } 
                         } else {
-                            return "NOT_PDF_FILE";
+                            $error_upload = "NOT_PDF_FILE";
                         }
                         break;
         
                     case 'audio':
                         $validExt = array("mp3","ogg","wav");
                         if (in_array($extFile, $validExt)) {
-                            if (move_uploaded_file($tmp, $fileDir)) {
-                                return true;
-                            } else {
-                                return "IMPORT_AUDIO_ERROR";
+                            if (!move_uploaded_file($tmp, $fileDir)) {
+                                $error_upload = "IMPORT_AUDIO_ERROR";
                             }
                         } else {
-                            return "NOT_AUDIO_FILE";
+                            $error_upload = "NOT_AUDIO_FILE";
                         }
                         break;
                     
                     case 'video':
                         $validExt = array("mp4","avi","mkv","webm");
                         if (in_array($extFile, $validExt)) {
-                            if (move_uploaded_file($tmp, $fileDir)) {
-                                return true;
-                            } else {
-                                return "IMPORT_VIDEO_ERROR";
+                            if (!move_uploaded_file($tmp, $fileDir)) {
+                                $error_upload = "IMPORT_VIDEO_ERROR";
                             }
                         } else {
-                            return "NOT_VIDEO_FILE";
+                            $error_upload = "NOT_VIDEO_FILE";
                         }
                         break;
                     
                     default:
-                        return "ERROR_FILE_TYPE";
+                        $error_upload = "ERROR_FILE_TYPE";
                         break;
                 }
             } else {
-                return "SIZE_MAX_ERROR";
+                $error_upload = "ERROR_SIZE_FILE";
             }
         }
+        if($error_upload) {
+            return $error_upload;
+        }
+        return true;
     }
 
     function download($path,$file) {
-        echo "<script>alert('".$path.$file."');</script>";
         if(preg_match('/^[^.][-a-z0-9_.]+[a-z]$/i', $file)){
             $filepath = $path.$file;
             if(file_exists($filepath)) {
@@ -294,9 +289,11 @@
                 readfile($filepath);
                 return true;
             } else {
+                routes("/500", "Fichier introuvable");
                 return false;
             }
         } else {
+            routes("/500", "Erreur download");
             return false;
         }
     }
@@ -308,17 +305,23 @@
     function is_form_valid($data) {
         if (isset($data) && !empty($data)) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
-    function str_contains($search_string, $string) {
+    function str_contain($search_string, $string) {
         if (preg_match("/{$search_string}/i", $string)) {
             return true;
-        } else {
-            return false;
         }
+        return false;
+    }
+
+    function validate_route() {
+        $uri = explode("/", $_SERVER['REQUEST_URI']);
+        $uri_invalid = str_contain("php", $uri[count($uri) - 1]) || str_contain("html", $uri[count($uri) - 1]) || str_contain("js", $uri[count($uri) - 1]) || str_contain("css", $uri[count($uri) - 1]) || str_contain("json", $uri[count($uri) - 1]) || str_contain("env", $uri[count($uri) - 1]) || str_contain("ini", $uri[count($uri) - 1]);
+        if ($uri_invalid) {
+            routes("/" . $uri[count($uri) - 1]);
+        } 
     }
 
     function array_to_json($data) {

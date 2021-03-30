@@ -3,28 +3,30 @@
     
         private $database;
         
-        function __construct($host,$dbname,$user,$password) {
+        function __construct($driver, $host,$dbname,$port,$user,$password) {
             try {
-                $this->database = new PDO("mysql:host=$host;dbname=$dbname","$user","$password");
+                switch ($driver) {
+                    case 'mysql':
+                        $this->database = new PDO("mysql:host=$host;dbname=$dbname;port=$port","$user","$password");
+                        break;
+                    
+                    case 'pg':
+                        $this->database = new PDO("pgsql:host=$host;dbname=$dbname;port=$port","$user","$password");
+                        break;
+                    
+                    default:
+                        routes('/500',"Database error => unkown driver");
+                        break;
+                }
                 $this->database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
                 routes('/500',"Database error => $e");
             }
         }
 
-        public function query($query) {
-            try {
-                return $this->database->exec($query);
-            } catch (Exception $e) {
-                routes('/500',"Query error => $e");
-                return [];
-            }
-        }
-
         public function execute($query) {
             try {
-                $this->database->exec($query);
-                return true;
+                return $this->database->exec($query);
             } catch (Exception $e) {
                 routes('/500',"Query error => $e");
                 return false;
@@ -41,7 +43,9 @@
                 $value = $this->database->prepare($query);
                 $row = $value->execute();
                 $row = $value->fetchAll();
-                if (count($row) == 1) $row = $value->fetch();
+                if (count($row) == 1) {
+                    $row = $value->fetch();
+                }
                 $value->closeCursor();
                 if (count($row) > 0) {
                     return $row;
@@ -76,12 +80,12 @@
                     return false;
                 }
             } else {
-                routes('/500',"Query error => value undefined");;
+                routes('/500',"Query error => value undefined");
                 return false;
             }
         }
 
-        public function update($table,$data,$cond) {
+        public function update($table, $data, $cond) {
             $value = '';
             $i = 0;
             foreach($data as $k=>$v) {
@@ -116,9 +120,9 @@
             }
         }
         
-        public function getLastValue($table, $value="*") {
+        public function getLastRow($table, $value="*") {
             $result = '';
-            $query = $this->database->query("SELECT $value FROM $table");
+            $query = $this->select($table, $value);
             try {
                 foreach($query as $v) {
 	                $result = $v;
