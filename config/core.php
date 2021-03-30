@@ -199,7 +199,7 @@
         imagejpeg($image, $destination, $quality);
     }
 
-    function upload($files, $path, $filename, $type=null, $allow_type=[], $maxSize=204800, $need_compress=false) {
+    function upload($files, $path, $filename, $type=null, $maxSize=204800, $allow_type=[], $need_compress=false) {
         $error_upload = null;
         $dir = new FileDir();
         if (!$dir->isDir($path)) {
